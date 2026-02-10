@@ -1,0 +1,40 @@
+// -----------------------------------------------------------------------
+// AUTHOR: Sara Salmanpour
+// CONTEXT: Azure Sentinel Lab - Custom Detection Rules
+// DESCRIPTION: A collection of KQL queries used to detect anomalies.
+// -----------------------------------------------------------------------
+
+// 1. Detect RDP Brute Force Attacks (Failed Logins > 20 in 10 mins)
+// Focus: Endpoint Monitoring & Threat Detection
+SecurityEvent
+| where EventID == 4625 // Failed login event
+| where AccountType == 'User'
+| summarize FailedCount = count() by IpAddress, Account, bin(TimeGenerated, 10m)
+| where FailedCount > 20
+| project TimeGenerated, Account, IpAddress, FailedCount
+| sort by TimeGenerated desc
+
+// 2. SSH Failed Logins (Linux VMs)
+// Focus: Linux Systems Security
+Syslog
+| where Facility == "auth" and SyslogMessage has "Failed password"
+| summarize AggregatedValue = count() by SourceIP, bin(TimeGenerated, 5m)
+| where AggregatedValue > 10
+| render timechart
+
+// 3. New User Added to 'Administrators' Group (Privilege Escalation)
+// Focus: IAM Controls & Persistence Detection
+SecurityEvent
+| where EventID == 4732 // A member was added to a security-enabled local group
+| where TargetUserName == "Administrators"
+| project TimeGenerated, Actor=SubjectUserName, NewAdmin=MemberName, Computer
+| extend Timestamp = TimeGenerated
+
+// 4. Geo-Location Anomaly (Impossible Travel)
+// Focus: Account Security (Relevant for Financial/Trading platforms)
+SigninLogs
+| where ResultType == 0 // Successful logins
+| extend City = tostring(LocationDetails.city)
+| extend Country = tostring(LocationDetails.countryOrRegion)
+| summarize Count=count() by UserPrincipalName, City, Country, bin(TimeGenerated, 1h)
+| where Count > 1
