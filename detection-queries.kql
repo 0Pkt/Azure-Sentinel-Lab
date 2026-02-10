@@ -1,8 +1,5 @@
-// -----------------------------------------------------------------------
-// AUTHOR: Sara Salmanpour
 // CONTEXT: Azure Sentinel Lab - Custom Detection Rules
 // DESCRIPTION: A collection of KQL queries used to detect anomalies.
-// -----------------------------------------------------------------------
 
 // 1. Detect RDP Brute Force Attacks (Failed Logins > 20 in 10 mins)
 // Focus: Endpoint Monitoring & Threat Detection
